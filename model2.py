@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plot
 import build_dataset
-from scipy import stats
+import random as random
 
 class Env():
     #TODO: description here
@@ -10,7 +10,7 @@ class Env():
         self.num_states = data_train.shape[1]
         self.max_steps_train = data_train.shape[0]
         self.max_steps_test = data_test.shape[0]
-        self.Q = np.zeros((self.num_states, self.num_states))
+        self.Q = np.zeros((self.num_states, 1))
         self.state = np.random.randint(0, self.num_states)
         self.action = np.random.randint(0, self.num_states)
         self.data_train = data_train
@@ -23,6 +23,7 @@ class Env():
         self.time = 0
         self.total_reward = 0
         self.timestep_reward = []
+        self.timestep_state = []
         self.learning_type = learning_type
         self.episodes_played = 0
         self.episodes_total = num_episodes
@@ -36,37 +37,34 @@ class Env():
                 self.episodes_played += 1
                 return
             else:
-                ret = self.data_train.iloc[self.time][self.action]
-                self.total_reward += ret
-                self.timestep_reward.append(self.total_reward)
-                # reward = stats.percentileofscore(self.reward_hist, ret, kind='mean')/100
-                reward = ret
-                self.reward_hist.append(ret)
-                new_state = self.action
                 if self.learning_type is 'Q':
-                    new_action = np.argmax(self.Q[new_state, :])
-                    # print(new_action)
+                    new_state = np.argmax(self.Q)
+                    # print(new_state)
                 elif self.learning_type is 'SARSA':
-                    new_action = self._greedy_espilon()
+                    new_state = self._greedy_espilon()
                 else:
-                    new_action = np.random.randint(0, self.num_states)
+                    new_state = np.random.randint(0, self.num_states)
+
+                reward = self.data_train.iloc[self.time][new_state]
+                self.total_reward += reward
+                self.timestep_reward.append(self.total_reward)
+                self.reward_hist.append(reward)
+
                 if self.time == self.max_steps_train-1:
-                    self.Q[self.state, self.action] += self.alpha * (reward - self.Q[self.state, new_action])
-                    self.timestep_reward.append(self.total_reward)
+                    self.Q[self.state] += self.alpha * (reward - self.Q[self.state])
                 else:
-                    self.Q[self.state, self.action] += self.alpha * (reward + (self.gamma * self.Q[new_state, new_action])
-                                                                     - self.Q[self.state, self.action])
+                    self.Q[self.state] += self.alpha * (reward + self.gamma * self.Q[new_state]
+                                                                     - self.Q[self.state])
                 self.state = new_state
-                self.action = new_action
-                # print(self.Q)
+                self.timestep_state.append(new_state)
         else:
             if self.time >= self.max_steps_test:
                 self.isEnd = True
                 self.episodes_played += 1
                 return
             else:
-                new_action = self._greedy_espilon()
-                reward = self.data_test[self.time][new_action]
+                new_state = self._greedy_espilon()
+                reward = self.data_test[self.time][new_state]
                 self.total_reward += reward
         return
 
@@ -75,16 +73,16 @@ class Env():
         self.isEnd = False
         self.total_reward = 0
         self.timestep_reward = []
-        # self.state = np.random.randint(0, self.num_states)
-        # self.action = np.random.randint(0, self.num_states)
-        self.state = 1
-        self.action = 1
+        self.timestep_state = []
+        self.reward_hist = []
+        self.episodes_played = 0
+        self.state = np.random.randint(0, self.num_states)
         return
 
     def _greedy_espilon(self):
-        self.epsilon *= 1-self.episodes_played/self.episodes_total
-        if self.train or random.rand() < self.epsilon:
-            action = np.argmax(self.Q[self.action, :])
+        k = self.epsilon * (1-self.episodes_played/self.episodes_total)
+        if not self.train or random.random() < k:
+            action = np.argmax(self.Q[self.time, :])
         else:
             action = np.random.randint(0, self.num_states)
         return action
@@ -97,9 +95,9 @@ def _collect_total_reward(dict):
     return res
 
 if __name__ == "__main__":
-    alpha = 0.4
-    gamma = 0.999
-    epsilon = 0.9
+    alpha = 0.1
+    gamma = 0.5
+    epsilon = 0.5
     episodes = 100
     learning_type = 'Q'
     train = True
@@ -110,11 +108,16 @@ if __name__ == "__main__":
     paths = {}
     perf = []
     for episode in range(episodes):
+        print('')
         print('--- episode #:{} ---'.format(episode))
         while not model.isEnd:
             model._step()
-        print('total reward = ', model.total_reward)
-        # print(model.Q)
+        print('total reward = {0:.0%}'.format(model.total_reward))
+        print('total time spend in states:')
+        print('state 1: {0:.0%}'.format(model.timestep_state.count(0)/model.max_steps_train))
+        print('state 2: {0:.0%}'.format(model.timestep_state.count(1) / model.max_steps_train))
+        print('state 3: {0:.0%}'.format(model.timestep_state.count(2) / model.max_steps_train))
+        print('Final Q:', model.Q.transpose())
         paths[episode] = model.timestep_reward
         perf.append(model.total_reward)
         # plot.figure()
@@ -124,6 +127,7 @@ if __name__ == "__main__":
     # plot.show()
     # plot.figure()
     plot.plot(range(model.episodes_total), perf)
+    plot.show()
     res = _collect_total_reward(paths)
     print('pause')
 

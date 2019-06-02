@@ -1,6 +1,6 @@
 {
-	"dataCodes": ["^FTSE", "^GSPC", "^N225"],
-	"startDate": "1990-01-01",
+	"dataCodes": ["GBPUSD=X", "EURUSD=X", "JPY=X"],
+	"startDate": "2004-01-01",
 	"endDate": "2018-12-31",
 	"invest_horizon": 1,
 	"look_back": 99,
