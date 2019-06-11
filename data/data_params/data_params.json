@@ -1,10 +1,5 @@
 {
 	"dataCodes": ["GBPUSD=X", "EURUSD=X", "JPY=X"],
 	"startDate": "2004-01-01",
-	"endDate": "2018-12-31",
-	"invest_horizon": 1,
-	"look_back": 99,
-	"train_prct": 0.75,
-	"dev_prct": 0.0,
-	"test_prct": 0.25
+	"endDate": "2018-12-31"
 }
