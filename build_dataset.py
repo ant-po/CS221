@@ -69,19 +69,6 @@ def getExistingData(filename):
     data = pd.read_csv(filename)
     return data
 
-
-# def saveDataToCsv(x_train, y_train, x_test, y_test, output_folder):
-#     """Import the training/test data from DataFrame to CSV files"""
-#     time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H_%M_%S')
-#     output_folder = output_folder + "/data_set_" + time_stamp
-#     if not os.path.exists(output_folder):
-#         os.makedirs(output_folder)
-#     pd.DataFrame(x_train).transpose().to_csv(output_folder + "/x_train_data.csv")
-#     pd.DataFrame(y_train).transpose().to_csv(output_folder + "/y_train_data.csv")
-#     pd.DataFrame(x_test).transpose().to_csv(output_folder + "/x_test_data.csv")
-#     pd.DataFrame(y_test).transpose().to_csv(output_folder + "/y_test_data.csv")
-#     print("Data has been saved in a CSV format in ", output_folder)
-
 def saveDataToCsv(data, output_folder):
     time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H_%M_%S')
     output_folder = output_folder + "/data_set_" + time_stamp
@@ -89,14 +76,6 @@ def saveDataToCsv(data, output_folder):
         os.makedirs(output_folder)
     data.to_csv(output_folder + '/state_data.csv')
     print("Data has been saved in a CSV format in ", output_folder)
-
-# def readDataFromCsv(output_folder):
-#     """Import the training/test data from CSV files to Numpy arrays"""
-#     x_train = np.array(pd.read_csv(output_folder+"/x_train_data.csv", index_col=0))
-#     y_train = np.array(pd.read_csv(output_folder + "/y_train_data.csv", index_col=0))
-#     x_test = np.array(pd.read_csv(output_folder+"/x_test_data.csv", index_col=0))
-#     y_test = np.array(pd.read_csv(output_folder + "/y_test_data.csv", index_col=0))
-#     return x_train, y_train, x_test, y_test
 
 def readDataFromCsv(output_folder):
     """Import the training/test data from CSV files to Numpy arrays"""
@@ -202,15 +181,6 @@ def staggered_sum(x, w):
 def getXYSet(data, look_back, invest_horizon):
     """Slice the data to create training X,Y examples"""
     time_series = data.values
-    # x_set = np.empty((time_series.shape[1]*(look_back+1), 1))
-    # y_set = np.empty([time_series.shape[1], 1])
-    # for row in range(look_back, time_series.shape[0]-invest_horizon):
-    #     x_back = np.nan_to_num(time_series[row-look_back:row+1])
-    #     x_set = np.append(x_set, x_back.reshape([x_back.size, 1], order='F'), axis=1)
-    #     x_forw = np.nan_to_num(time_series[row+1:row+invest_horizon+1])
-    #     y_temp = np.reshape(np.sum(x_forw, axis=0), (3, 1))
-    #     y_set = np.append(y_set, np.array(y_temp), axis=1)
-
     return time_series
 
 
@@ -233,19 +203,7 @@ if __name__ == '__main__':
     # Convert prices to log returns
     hist_returns = hist_prices.pct_change(1)
     hist_returns.fillna(0, inplace=True)
-    # Normalise the series
-    # hist_returns = (hist_returns - hist_returns.mean(axis=0))/hist_returns.std(axis=0)
-
-    # # Generate train data sets
-    # train_returns = hist_returns.iloc[:int(data_params.train_prct*hist_returns.shape[0]), :]
-    # # x_train, y_train = getXYSet(train_returns, data_params.look_back, data_params.invest_horizon)
-    # return_series_train = getXYSet(train_returns, data_params.look_back, data_params.invest_horizon)
-    # # Generate dev/test sets
-    # test_returns = hist_returns.iloc[int(data_params.train_prct*hist_returns.shape[0])+1:int((data_params.train_prct+data_params.test_prct)*hist_returns.shape[0]), :]
-    # # x_test, y_test = getXYSet(test_returns, data_params.look_back, data_params.invest_horizon)
-    # return_series_test = getXYSet(test_returns, data_params.look_back, data_params.invest_horizon)
 
     # Output the results to csv
-    # saveDataToCsv(x_train, y_train, x_test, y_test, args.output_dir)
     saveDataToCsv(hist_returns, args.output_dir)
     print("Done building dataset. Ready to train the model now!")
